@@ -14,20 +14,19 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import bitcoin.core
 
 class MainParams(bitcoin.core.CoreChainParams):
-    MESSAGE_START = b'\xf9\xbe\xb4\xd9'
-    DEFAULT_PORT = 8333
-    RPC_PORT = 8332
-    DNS_SEEDS = (('bitcoin.sipa.be', 'seed.bitcoin.sipa.be'),
-                 ('bluematt.me', 'dnsseed.bluematt.me'),
-                 ('dashjr.org', 'dnsseed.bitcoin.dashjr.org'),
-                 ('bitcoinstats.com', 'seed.bitcoinstats.com'),
-                 ('xf2.org', 'bitseed.xf2.org'))
-    BASE58_PREFIXES = {'PUBKEY_ADDR':0,
-                       'SCRIPT_ADDR':5,
+    MESSAGE_START = b'\xa1\xa0\xa2\xa3'
+    DEFAULT_PORT = 50990
+    RPC_PORT = 51990
+    DNS_SEEDS = (('opal-coin.com', 'seed.opal-coin.com'),
+                 ('opal-coin.com', 'seeder1.opal-coin.com'),
+                 ('opal-coin.com', 'seeder2.opal-coin.com'))
+    BASE58_PREFIXES = {'PUBKEY_ADDR':115,
+                       'SCRIPT_ADDR':28,
                        'SECRET_KEY' :128}
 
+"""
 class TestNetParams(bitcoin.core.CoreTestNetParams):
-    MESSAGE_START = b'\x0b\x11\x09\x07'
+    MESSAGE_START = b'\xa1\xa0\xa2\xa3'
     DEFAULT_PORT = 18333
     RPC_PORT = 18332
     DNS_SEEDS = (('bitcoin.petertodd.org', 'testnet-seed.bitcoin.petertodd.org'),
@@ -44,7 +43,7 @@ class RegTestParams(bitcoin.core.CoreRegTestParams):
     BASE58_PREFIXES = {'PUBKEY_ADDR':111,
                        'SCRIPT_ADDR':196,
                        'SECRET_KEY' :239}
-
+"""
 """Master global setting for what chain params we're using.
 
 However, don't set this directly, use SelectParams() instead so as to set the
@@ -64,9 +63,9 @@ def SelectParams(name):
     bitcoin.core._SelectCoreParams(name)
     if name == 'mainnet':
         params = bitcoin.core.coreparams = MainParams()
-    elif name == 'testnet':
-        params = bitcoin.core.coreparams = TestNetParams()
-    elif name == 'regtest':
-        params = bitcoin.core.coreparams = RegTestParams()
+#    elif name == 'testnet':
+#        params = bitcoin.core.coreparams = TestNetParams()
+#    elif name == 'regtest':
+#        params = bitcoin.core.coreparams = RegTestParams()
     else:
         raise ValueError('Unknown chain %r' % name)

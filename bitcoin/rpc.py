@@ -73,8 +73,8 @@ class RawProxy(object):
                 elif platform.system() == 'Windows':
                     btc_conf_file = os.path.join(os.environ['APPDATA'], 'Bitcoin')
                 else:
-                    btc_conf_file = os.path.expanduser('~/.bitcoin')
-                btc_conf_file = os.path.join(btc_conf_file, 'bitcoin.conf')
+                    btc_conf_file = os.path.expanduser('~/.opalcoin')
+                btc_conf_file = os.path.join(btc_conf_file, 'opalcoin.conf')
 
             # Extract contents of bitcoin.conf to build service_url
             with open(btc_conf_file, 'r') as fd:
@@ -102,7 +102,6 @@ class RawProxy(object):
 
                 if 'rpcpassword' not in conf:
                     raise ValueError('The value of rpcpassword not specified in the configuration file: %s' % btc_conf_file)
-
                 service_url = ('%s://%s:%s@localhost:%d' %
                     ('https' if conf['rpcssl'] else 'http',
                      conf['rpcuser'], conf['rpcpassword'],

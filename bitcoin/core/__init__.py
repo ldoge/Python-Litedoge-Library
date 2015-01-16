@@ -302,9 +302,9 @@ class CMutableTxOut(CTxOut):
 
 class CTransaction(ImmutableSerializable):
     """A transaction"""
-    __slots__ = ['nVersion', 'vin', 'vout', 'nLockTime']
+    __slots__ = ['nVersion', 'vin', 'vout', 'nLockTime', 'nTime']
 
-    def __init__(self, vin=(), vout=(), nLockTime=0, nVersion=1):
+    def __init__(self, vin=(), vout=(), nLockTime=0, nTime=None, nVersion=1):
         """Create a new transaction
 
         vin and vout are iterables of transaction inputs and outputs
@@ -314,7 +314,11 @@ class CTransaction(ImmutableSerializable):
         if not (0 <= nLockTime <= 0xffffffff):
             raise ValueError('CTransaction: nLockTime must be in range 0x0 to 0xffffffff; got %x' % nLockTime)
         object.__setattr__(self, 'nLockTime', nLockTime)
-
+        if nTime == None:
+            nTime = int(time.time())
+        if not (0 <= nTime <= 0xffffffff):
+            raise ValueError('CTransaction: nTime must be in range 0x0 to 0xffffffff; got %x' % nTime)
+        object.__setattr__(self, 'nTime', nTime)
         object.__setattr__(self, 'nVersion', nVersion)
         object.__setattr__(self, 'vin', tuple(CTxIn.from_txin(txin) for txin in vin))
         object.__setattr__(self, 'vout', tuple(CTxOut.from_txout(txout) for txout in vout))
@@ -322,13 +326,15 @@ class CTransaction(ImmutableSerializable):
     @classmethod
     def stream_deserialize(cls, f):
         nVersion = struct.unpack(b"<i", ser_read(f,4))[0]
+        nTime = struct.unpack(b"<i", ser_read(f,4))[0]
         vin = VectorSerializer.stream_deserialize(CTxIn, f)
         vout = VectorSerializer.stream_deserialize(CTxOut, f)
         nLockTime = struct.unpack(b"<I", ser_read(f,4))[0]
-        return cls(vin, vout, nLockTime, nVersion)
+        return cls(vin, vout, nLockTime, nTime, nVersion)
 
     def stream_serialize(self, f):
         f.write(struct.pack(b"<i", self.nVersion))
+        f.write(struct.pack(b"<i", self.nTime))
         VectorSerializer.stream_serialize(CTxIn, self.vin, f)
         VectorSerializer.stream_serialize(CTxOut, self.vout, f)
         f.write(struct.pack(b"<I", self.nLockTime))
@@ -337,7 +343,7 @@ class CTransaction(ImmutableSerializable):
         return len(self.vin) == 1 and self.vin[0].prevout.is_null()
 
     def __repr__(self):
-        return "CTransaction(%r, %r, %i, %i)" % (self.vin, self.vout, self.nLockTime, self.nVersion)
+        return "CTransaction(%r, %r, %i, %i, %i)" % (self.vin, self.vout, self.nLockTime, self.nTime, self.nVersion)
 
     @classmethod
     def from_tx(cls, tx):
@@ -350,7 +356,7 @@ class CTransaction(ImmutableSerializable):
             return tx
 
         else:
-            return cls(tx.vin, tx.vout, tx.nLockTime, tx.nVersion)
+            return cls(tx.vin, tx.vout, tx.nLockTime, tx.nTime, tx.nVersion)
 
 
 @__make_mutable
@@ -358,10 +364,13 @@ class CMutableTransaction(CTransaction):
     """A mutable transaction"""
     __slots__ = []
 
-    def __init__(self, vin=None, vout=None, nLockTime=0, nVersion=1):
+    def __init__(self, vin=None, vout=None, nLockTime=0, nTime=0, nVersion=1):
         if not (0 <= nLockTime <= 0xffffffff):
             raise ValueError('CTransaction: nLockTime must be in range 0x0 to 0xffffffff; got %x' % nLockTime)
         self.nLockTime = nLockTime
+        if not (0 <= nTime <= 0xffffffff):
+            raise ValueError('CTransaction: nTime must be in range 0x0 to 0xffffffff; got %x' % nTime)
+        self.nTime = nTime
 
         if vin is None:
             vin = []
@@ -378,7 +387,7 @@ class CMutableTransaction(CTransaction):
         vin = [CMutableTxIn.from_txin(txin) for txin in tx.vin]
         vout = [CMutableTxOut.from_txout(txout) for txout in tx.vout]
 
-        return cls(vin, vout, tx.nLockTime, tx.nVersion)
+        return cls(vin, vout, tx.nLockTime, tx.nTime, tx.nVersion)
 
 
 
@@ -503,7 +512,6 @@ class CBlock(CBlockHeader):
         vMerkleTree = tuple(CBlock.build_merkle_tree_from_txs(vtx))
         object.__setattr__(self, 'vMerkleTree', vMerkleTree)
         object.__setattr__(self, 'vtx', tuple(vtx))
-
         return self
 
     def stream_serialize(self, f):
@@ -544,10 +552,10 @@ class CoreChainParams(object):
 
 class CoreMainParams(CoreChainParams):
     NAME = 'mainnet'
-    GENESIS_BLOCK = CBlock.deserialize(x('0100000000000000000000000000000000000000000000000000000000000000000000003ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a29ab5f49ffff001d1dac2b7c0101000000010000000000000000000000000000000000000000000000000000000000000000ffffffff4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73ffffffff0100f2052a01000000434104678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5fac00000000'))
+    GENESIS_BLOCK = CBlock.deserialize(x('010000000000000000000000000000000000000000000000000000000000000000000000fbec448cda31e81bb3cf270a52e4c0011ea70956ab256ac8401dc983c00f78e90952dd53ffff0f1e2db92a0001010000000952dd53010000000000000000000000000000000000000000000000000000000000000000ffffffff1100012a0d4f6e7978436f696e2076322e30ffffffff0100000000000000000000000000'))
     SUBSIDY_HALVING_INTERVAL = 210000
     PROOF_OF_WORK_LIMIT = 2**256-1 >> 32
-
+"""
 class CoreTestNetParams(CoreMainParams):
     NAME = 'testnet'
     GENESIS_BLOCK = CBlock.deserialize(x('0100000000000000000000000000000000000000000000000000000000000000000000003ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4adae5494dffff001d1aa4ae180101000000010000000000000000000000000000000000000000000000000000000000000000ffffffff4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73ffffffff0100f2052a01000000434104678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5fac00000000'))
@@ -557,7 +565,7 @@ class CoreRegTestParams(CoreTestNetParams):
     GENESIS_BLOCK = CBlock.deserialize(x('0100000000000000000000000000000000000000000000000000000000000000000000003ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4adae5494dffff7f20020000000101000000010000000000000000000000000000000000000000000000000000000000000000ffffffff4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73ffffffff0100f2052a01000000434104678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5fac00000000'))
     SUBSIDY_HALVING_INTERVAL = 150
     PROOF_OF_WORK_LIMIT = 2**256-1 >> 1
-
+"""
 """Master global setting for what core chain params we're using"""
 coreparams = CoreMainParams()
 
