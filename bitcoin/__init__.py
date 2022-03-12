@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2014 The python-bitcoinlib developers
+# Copyright (C) 2012-2022 The python-bitcoinlib developers
 #
 # This file is part of python-bitcoinlib.
 #
@@ -14,12 +14,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import bitcoin.core
 
 class MainParams(bitcoin.core.CoreChainParams):
-    MESSAGE_START = b'\xa1\xa0\xa2\xa3'
-    DEFAULT_PORT = 50990
-    RPC_PORT = 51990
-    DNS_SEEDS = (('opal-coin.com', 'seed.opal-coin.com'),
-                 ('opal-coin.com', 'seeder1.opal-coin.com'),
-                 ('opal-coin.com', 'seeder2.opal-coin.com'))
+    MESSAGE_START = b'\x65\x44\x15\x06'
+    DEFAULT_PORT = 17014
+    RPC_PORT = 17015
+    DNS_SEEDS = (('seed01.litedogeofficial.org', 'litedogeofficial.org'),
+                 ('213.136.78.68'), ('137.184.45.155'),
+                 ('42.153.139.82'))
     BASE58_PREFIXES = {'PUBKEY_ADDR':115,
                        'SCRIPT_ADDR':28,
                        'SECRET_KEY' :128}
