@@ -71,10 +71,10 @@ class RawProxy(object):
                 if platform.system() == 'Darwin':
                     btc_conf_file = os.path.expanduser('~/Library/Application Support/Bitcoin/')
                 elif platform.system() == 'Windows':
-                    btc_conf_file = os.path.join(os.environ['APPDATA'], 'Bitcoin')
+                    btc_conf_file = os.path.join(os.environ['APPDATA'], 'Litedoge')
                 else:
-                    btc_conf_file = os.path.expanduser('~/.bitcoin')
-                btc_conf_file = os.path.join(btc_conf_file, 'bitcoin.conf')
+                    btc_conf_file = os.path.expanduser('~/.litedoge')
+                btc_conf_file = os.path.join(btc_conf_file, 'litedoge.conf')
 
             # Extract contents of bitcoin.conf to build service_url
             with open(btc_conf_file, 'r') as fd:
